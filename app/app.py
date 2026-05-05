@@ -682,13 +682,39 @@ with tab_viz:
         else:
             st.info("Need at least one numeric and one categorical column for combined charts.")
             
-
+        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+        
+        if len(categorical_cols) >= 2:
+            cat1, cat2 = st.columns([1,3])
+            with cat1:
+                st.markdown("##### Categorical vs Categorical \n --- \n")
+                cat_col1 = st.selectbox("X axis", categorical_cols, key="cat_col1")
+                cat_col2 = st.selectbox("Y axis", categorical_cols,
+                                        index=min(1, len(categorical_cols)-1), key="cat_col2")
+                
+                chart_type = st.radio("Chart", ["Grouped Bar", "Stacked Bar", "Heatmap"])
+            
+            with cat2:
+                if cat_col1 != cat_col2:
+                    if chart_type == "Grouped Bar":
+                        st.markdown(f"##### Grouped Bar Chart — `{cat_col1}` vs `{cat_col2}`")
+                        st.plotly_chart(visualizer.categorical_vs_categorical_bar(cat_col1,cat_col2))
+                    elif chart_type == "Stacked Bar":
+                        st.markdown(f"##### Stacked Bar Chart — `{cat_col1}` vs `{cat_col2}`")
+                        st.plotly_chart(visualizer.categorical_vs_categorical_stacked(cat_col1,cat_col2))
+                    elif chart_type == "Heatmap":
+                        st.markdown(f"##### Heatmap - `{cat_col1}` vs `{cat_col2}`")
+                        st.plotly_chart(visualizer.categorical_heatmap(cat_col1, cat_col2))
+                else:
+                    st.info("Please select different Columns for X and Y axis.")
+        else:
+            st.info("Need at least 2 categorical columns for categorical vs categorical charts.")
         st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
 
         if len(numeric_cols) >= 2:
-            st.markdown("##### Scatter Plot")
             sc1, sc2= st.columns([1, 3])
             with sc1:
+                st.markdown("##### Scatter Plot")
                 x_col = st.selectbox("X Axis", numeric_cols, key="x_col")
                 y_col = st.selectbox("Y Axis", numeric_cols,
                                      index=min(1, len(numeric_cols)-1), key="y_col")
@@ -735,33 +761,6 @@ with tab_viz:
         else:
             st.info("Not enough numeric columns for correlation analysis.")
 
-        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
-        
-        if len(categorical_cols) >= 2:
-            st.markdown("##### Categorical vs Categorical")
-            cat1, cat2 = st.columns([1,3])
-            with cat1:
-                cat_col1 = st.selectbox("X axis", categorical_cols, key="cat_col1")
-                cat_col2 = st.selectbox("Y axis", categorical_cols,
-                                        index=min(1, len(categorical_cols)-1), key="cat_col2")
-                
-                chart_type = st.radio("Chart", ["Grouped Bar", "Stacked Bar", "Heatmap"])
-            
-            with cat2:
-                if cat_col1 != cat_col2:
-                    if chart_type == "Grouped Bar":
-                        st.markdown(f"##### Grouped Bar Chart — `{cat_col1}` vs `{cat_col2}`")
-                        st.plotly_chart(visualizer.categorical_vs_categorical_bar(cat_col1,cat_col2))
-                    elif chart_type == "Stacked Bar":
-                        st.markdown(f"##### Stacked Bar Chart — `{cat_col1}` vs `{cat_col2}`")
-                        st.plotly_chart(visualizer.categorical_vs_categorical_stacked(cat_col1,cat_col2))
-                    elif chart_type == "Heatmap":
-                        st.markdown(f"##### Heatmap - `{cat_col1}` vs `{cat_col2}`")
-                        st.plotly_chart(visualizer.categorical_heatmap(cat_col1, cat_col2))
-                else:
-                    st.info("Please select different Columns for X and Y axis.")
-        else:
-            st.info("Need at least 2 categorical columns for categorical vs categorical charts.")
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 4 — Insights
 # ══════════════════════════════════════════════════════════════════════════════
