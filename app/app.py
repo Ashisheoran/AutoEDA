@@ -126,6 +126,23 @@ header { visibility: visible;
   letter-spacing: 0.05em;
 }
 
+.wordmark {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 2.3rem;
+    font-weight: 600;
+    color: #f8fafc;
+    letter-spacing: -0.02em;
+}
+
+.wordmark span { color: #00f5ff; }
+
+.version-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    color: #334155;
+    letter-spacing: 0.12em;
+}
+
 /* ── Section headers ── */
 .section-label {
   font-family: 'JetBrains Mono', monospace;
@@ -168,7 +185,7 @@ header { visibility: visible;
   text-align: center;
 }
 .metric-value {
-  font-family: 'Syne', sans-serif;
+  font-family: 'IBM Plex Mono', monospace;
   font-size: 2rem;
   font-weight: 800;
   color: var(--accent);
@@ -211,13 +228,22 @@ header { visibility: visible;
 .insight-dot.error { background: var(--danger); }
 .insight-dot.ok    { background: var(--success); }
 
+            
+.chip-card {
+    background: #111318;
+    border: 1px solid #1e2330;
+    border-radius: 6px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+}
+            
 /* ── Category chip ── */
 .chip {
   display: inline-block;
   background: rgba(79,217,196,0.12);
   border: 1px solid rgba(79,217,196,0.25);
   color: var(--accent);
-  border-radius: 20px;
+  border-radius: 10px;
   padding: 3px 12px;
   font-size: 0.7rem;
   font-family: 'JetBrains Mono', monospace;
@@ -399,15 +425,6 @@ from core.ai_assistant import AIAssistant
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("""
-    <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">⬡</div>
-        <div>
-            <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;letter-spacing:-0.02em;">AutoEDA</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text-muted);letter-spacing:0.05em;">v2.0 · PRODUCTION</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
 
     st.markdown('<div class="sidebar-section">Upload Dataset</div>', unsafe_allow_html=True)
     uploaded_file = st.file_uploader("", type=["csv"], label_visibility="collapsed")
@@ -435,35 +452,33 @@ with st.sidebar:
 
 
 # ── Hero bar ───────────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="hero-bar">
-    <div class="hero-logo">⬡</div>
-    <div>
-        <div class="hero-title">AutoEDA</div>
-        <div class="hero-sub">Automated Exploratory Data Analysis · Machine Learning · AI Insights</div>
+if uploaded_file:
+    st.markdown("""
+    <div class="hero-bar">
+        <div>
+            <div class="wordmark">
+                Auto<span class="wordmark-highlight">EDA</span>
+            </div>
+            <div class="hero-sub">Automated Exploratory Data Analysis · Machine Learning · AI Insights</div>
+        </div>
+        <div class="hero-badge">● LIVE</div>
     </div>
-    <div class="hero-badge">● LIVE</div>
-</div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
 # ── No file state ──────────────────────────────────────────────────────────────
 if not uploaded_file:
     st.markdown("""
-    <div style="text-align:center;padding:80px 0 60px;">
-        <div style="font-size:3.5rem;margin-bottom:20px;">⬡</div>
-        <div style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;
-                    letter-spacing:-0.03em;margin-bottom:12px;color:var(--text);">
-            Drop your dataset. Get instant intelligence.
+    <div style="text-align:center;padding:200px 0 30px;">
+        <div class="wordmark" style="font-size:4rem;">
+            Auto<span class="wordmark-highlight">EDA</span>
         </div>
-        <div style="color:var(--text-muted);font-size:0.95rem;max-width:480px;margin:0 auto 32px;line-height:1.7;">
-            Upload any CSV file to unlock automated profiling, visualizations, rule-based insights,
-            ML model training, and AI-powered explanations — all in one pipeline.
-        </div>
-        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-            <span class="chip">📊 Auto Profiling</span>
-            <span class="chip purple">🔍 Smart Insights</span>
-            <span class="chip pink">🤖 ML Training</span>
-            <span class="chip">✨ AI Explanations</span>
+        <div style="color:var(--text-muted);font-size:1.2rem;max-width:600px;margin:0 auto 32px;line-height:1.7;color:#c6fdff;opacity:0.6;">
+            Upload a CSV dataset to automatically generate profiling reports, visualizations, statistical insights, and machine learning analysis in a single dashboard.</div>
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;color:#e8ffed">
+            <span class="chip-card">📊 Auto Profiling</span>
+            <span class="chip-card purple">🔍 Smart Insights</span>
+            <span class="chip-card pink">🤖 ML Training</span>
+            <span class="chip-card">✨ AI Explanations</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -506,7 +521,7 @@ kpi(k5, f"{missing_pct}%", "Missing Data",
 st.markdown("<div style='margin-bottom:28px;'></div>", unsafe_allow_html=True)
 
 # ── Main tabs ──────────────────────────────────────────────────────────────────
-tab_data, tab_profile, tab_viz, tab_insights, tab_ml, tab_ai = st.tabs([
+tab_data, tab_profile, tab_viz, tab_insights, tab_ml, tab_ai= st.tabs([
     "📋  Data Preview",
     "🔬  Profile",
     "📈  Visualize",
