@@ -949,8 +949,8 @@ with tab_ai:
             if not api_key or api_key.strip() == "":
                 st.warning("Please enter a valid API key in the sidebar.")
             else:
-                with st.spinner(f"Consulting {provider}…"):
-                    # Re-generate insights if not already done
+                with st.spinner(f"Thinking..."):
+
                     all_insights = st.session_state.get("insights")
 
                     if not all_insights:
