@@ -10,11 +10,10 @@ import streamlit as st
 @st.cache_data
 def load_data(file):
     loader = DataLoader(file)
-    df = loader.load_data()          # read ONCE
-    info = loader.basic_info(df)     # reuse df
+    df = loader.load_data()         
+    info = loader.basic_info(df)     
     return df, info
 
-# ── Page config (must be first Streamlit call) ────────────────────────────────
 st.set_page_config(
     page_title="AutoEDA AI",
     page_icon="⬡",
@@ -22,7 +21,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Global CSS injection ───────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
@@ -415,7 +413,6 @@ iframe[title="st_aggrid"] { border: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# ── Imports (after CSS) ────────────────────────────────────────────────────────
 from core.data_loader import DataLoader
 from core.profiler import DataProfiler
 from core.visualizer import DataVisualizer
@@ -475,10 +472,10 @@ if not uploaded_file:
         <div style="color:var(--text-muted);font-size:1.2rem;max-width:600px;margin:0 auto 32px;line-height:1.7;color:#c6fdff;opacity:0.6;">
             Upload a CSV dataset to automatically generate profiling reports, visualizations, statistical insights, and machine learning analysis in a single dashboard.</div>
         <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;color:#e8ffed">
-            <span class="chip-card">📊 Auto Profiling</span>
-            <span class="chip-card purple">🔍 Smart Insights</span>
-            <span class="chip-card pink">🤖 ML Training</span>
-            <span class="chip-card">✨ AI Explanations</span>
+            <span class="chip-card"> Auto Profiling</span>
+            <span class="chip-card purple"> Smart Insights</span>
+            <span class="chip-card pink"> ML Training</span>
+            <span class="chip-card"> AI Explanations</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -522,17 +519,16 @@ st.markdown("<div style='margin-bottom:28px;'></div>", unsafe_allow_html=True)
 
 # ── Main tabs ──────────────────────────────────────────────────────────────────
 tab_data, tab_profile, tab_viz, tab_insights, tab_ml, tab_ai= st.tabs([
-    "📋  Data Preview",
-    "🔬  Profile",
-    "📈  Visualize",
-    "💡  Insights",
-    "🤖  ML Model",
-    "✨  AI Assistant",
+    "Data Preview",
+    "Profile",
+    "Visualize",
+    "Insights",
+    "ML Model",
+    "AI Assistant",
 ])
 
-# ══════════════════════════════════════════════════════════════════════════════
 # TAB 1 — Data Preview
-# ══════════════════════════════════════════════════════════════════════════════
+
 with tab_data:
     st.markdown('<div class="section-label">Raw Dataset</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Data Preview</div>', unsafe_allow_html=True)
@@ -555,9 +551,8 @@ with tab_data:
         st.markdown('<div class="section-title">Classification</div>', unsafe_allow_html=True)
         st.json(column_types)
 
-# ══════════════════════════════════════════════════════════════════════════════
 # TAB 2 — Profiler
-# ══════════════════════════════════════════════════════════════════════════════
+
 with tab_profile:
     st.markdown('<div class="section-label">Automated Profiling</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Data Health Report</div>', unsafe_allow_html=True)
@@ -575,7 +570,7 @@ with tab_profile:
         <div class="metric-card" style="text-align:left;margin-top:8px;">
             <div class="metric-value" style="color:{dup_color};">{dup_count}</div>
             <div class="metric-label">Duplicate rows detected</div>
-            <div class="metric-sub">{'⚠️ Consider deduplication' if dup_count > 0 else '✅ Dataset is clean'}</div>
+            <div class="metric-sub">{'Consider deduplication' if dup_count > 0 else 'Dataset is clean'}</div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -776,9 +771,8 @@ with tab_viz:
         else:
             st.info("Not enough numeric columns for correlation analysis.")
 
-# ══════════════════════════════════════════════════════════════════════════════
 # TAB 4 — Insights
-# ══════════════════════════════════════════════════════════════════════════════
+
 with tab_insights:
     st.markdown('<div class="section-label">Rule-Based Engine</div>', unsafe_allow_html=True)
     
@@ -792,12 +786,12 @@ with tab_insights:
 
     # Color map for insight categories
     category_colors = {
-        "missing":    ("warn",  "⚠️"),
-        "outlier":    ("error", "🔴"),
-        "skewness":   ("warn",  "📐"),
-        "correlation":("ok",    "🔗"),
-        "cardinality":("warn",  "🎯"),
-        "duplicate":  ("error", "🔁"),
+        "missing":    ("warn",  " "),
+        "outlier":    ("error", " "),
+        "skewness":   ("warn",  " "),
+        "correlation":("ok",    " "),
+        "cardinality":("warn",  " "),
+        "duplicate":  ("error", " "),
     }
 
     total_insights = sum(len(v) for v in insights.values())
@@ -811,8 +805,8 @@ with tab_insights:
     """, unsafe_allow_html=True)
 
     for category, items in insights.items():
-        dot_class, emoji = category_colors.get(category, ("ok", "📌"))
-        with st.expander(f"{emoji}  {category.replace('_',' ').title()}  ({len(items)} findings)", expanded=True):
+        dot_class = category_colors.get(category, ("ok"))
+        with st.expander(f"{category.replace('_',' ').title()}  ({len(items)} findings)", expanded=True):
             if items:
                 for item in items:
                     st.markdown(f"""
@@ -845,79 +839,83 @@ with tab_insights:
         file_name="eda_report.txt"
 )
         
-# ══════════════════════════════════════════════════════════════════════════════
 # TAB 5 — ML Model
-# ══════════════════════════════════════════════════════════════════════════════
+
 with tab_ml:
-    st.markdown('<div class="section-label">AutoML Pipeline</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Train a Model</div>', unsafe_allow_html=True)
+    numeric_cols = df.select_dtypes(include="number").columns
 
-    ml1, ml2 = st.columns([1, 2])
-    with ml1:
-        st.markdown("**Select target column**")
-        target_column = st.selectbox("Target", df.columns, label_visibility="collapsed")
-        train_btn = st.button("🚀  Train Model", use_container_width=True)
+    if len(numeric_cols) == 0:
+        st.info("ML training requires at least one numeric column.")
+        
+    else:
+        st.markdown('<div class="section-label">AutoML Pipeline</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">Train a Model</div>', unsafe_allow_html=True)
 
-    with ml2:
-        st.markdown("""
-        <div class="card" style="color:var(--text-muted);font-size:0.85rem;line-height:1.7;">
-            AutoEDA will automatically detect whether to run a
-            <strong style="color:var(--accent)">Regression</strong> or
-            <strong style="color:var(--accent2)">Classification</strong> pipeline
-            based on your target column, then train, evaluate, and report results instantly.
-        </div>
-        """, unsafe_allow_html=True)
+        ml1, ml2 = st.columns([1, 2])
+        with ml1:
+            st.markdown("**Select target column**")
+            target_column = st.selectbox("Target", df.columns, label_visibility="collapsed")
+            train_btn = st.button("Train Model", use_container_width=True)
 
-    if train_btn:
-        if df[target_column].nunique() < 2:
-            st.warning("Target column must have at least 2 unique values")
-        else:
-            with st.spinner("Training model — this may take a moment…"):
-                ml_engine = MLEngine(df, target_column)
-                results = ml_engine.train()
-
-            model_type = results.get("type", "unknown")
-            badge_color = "var(--accent)" if model_type == "regression" else "var(--accent2)"
-
-            st.markdown(f"""
-            <div class="result-block">
-                <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
-                    <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;">Model trained</span>
-                    <span class="chip {'purple' if model_type != 'regression' else ''}">
-                        {model_type.upper()}
-                    </span>
-                </div>
+        with ml2:
+            st.markdown("""
+            <div class="card" style="color:var(--text-muted);font-size:0.85rem;line-height:1.7;">
+                AutoEDA will automatically detect whether to run a
+                <strong style="color:var(--accent)">Regression</strong> or
+                <strong style="color:var(--accent2)">Classification</strong> pipeline
+                based on your target column, then train, evaluate, and report results instantly.
+            </div>
             """, unsafe_allow_html=True)
 
-            if model_type == "regression":
-                ra, rb = st.columns(2)
-                ra.markdown(f"""
-                <div class="metric-card">
-                    <div class="result-score" style="color:var(--accent);">{results['r2']:.4f}</div>
-                    <div class="result-score-label">R² Score</div>
-                </div>
-                """, unsafe_allow_html=True)
-                rb.markdown(f"""
-                <div class="metric-card">
-                    <div class="result-score" style="color:var(--accent3);">{results['mse']:.4f}</div>
-                    <div class="result-score-label">Mean Squared Error</div>
-                </div>
-                """, unsafe_allow_html=True)
+        if train_btn:
+            if df[target_column].nunique() < 2:
+                st.warning("Target column must have at least 2 unique values")
             else:
+                with st.spinner("Training model — this may take a moment…"):
+                    ml_engine = MLEngine(df, target_column)
+                    results = ml_engine.train()
+
+                model_type = results.get("type", "unknown")
+                badge_color = "var(--accent)" if model_type == "regression" else "var(--accent2)"
+
                 st.markdown(f"""
-                <div class="metric-card" style="text-align:left;margin-bottom:16px;">
-                    <div class="result-score" style="color:var(--accent2);">{results['accuracy']:.4f}</div>
-                    <div class="result-score-label">Accuracy Score</div>
-                </div>
+                <div class="result-block">
+                    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+                        <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.1rem;">Model trained</span>
+                        <span class="chip {'purple' if model_type != 'regression' else ''}">
+                            {model_type.upper()}
+                        </span>
+                    </div>
                 """, unsafe_allow_html=True)
-                st.markdown("**Classification Report**")
-                st.code(results["report"], language="text")
 
-            st.markdown("</div>", unsafe_allow_html=True)
+                if model_type == "regression":
+                    ra, rb = st.columns(2)
+                    ra.markdown(f"""
+                    <div class="metric-card">
+                        <div class="result-score" style="color:var(--accent);">{results['r2']:.4f}</div>
+                        <div class="result-score-label">R² Score</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    rb.markdown(f"""
+                    <div class="metric-card">
+                        <div class="result-score" style="color:var(--accent3);">{results['mse']:.4f}</div>
+                        <div class="result-score-label">Mean Squared Error</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                    <div class="metric-card" style="text-align:left;margin-bottom:16px;">
+                        <div class="result-score" style="color:var(--accent2);">{results['accuracy']:.4f}</div>
+                        <div class="result-score-label">Accuracy Score</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    st.markdown("**Classification Report**")
+                    st.code(results["report"], language="text")
 
-# ══════════════════════════════════════════════════════════════════════════════
+                st.markdown("</div>", unsafe_allow_html=True)
+
 # TAB 6 — AI Assistant
-# ══════════════════════════════════════════════════════════════════════════════
+
 with tab_ai:
     st.markdown('<div class="section-label">Powered by LLMs</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-title">AI Insight Assistant</div>', unsafe_allow_html=True)
@@ -940,16 +938,16 @@ with tab_ai:
         </div>
         <div class="sidebar-stat">
             <span>API Key</span>
-            <span class="sidebar-stat-val">{'✅ Set' if api_key else '❌ Missing'}</span>
+            <span class="sidebar-stat-val">{'Set' if api_key else 'Missing'}</span>
         </div>
         """, unsafe_allow_html=True)
 
-        gen_btn = st.button("✨  Generate AI Insights", use_container_width=True)
+        gen_btn = st.button("Generate AI Insights", use_container_width=True)
 
     with ai2:
         if gen_btn:
             if not api_key or api_key.strip() == "":
-                st.warning("⚠️  Please enter a valid API key in the sidebar.")
+                st.warning("Please enter a valid API key in the sidebar.")
             else:
                 with st.spinner(f"Consulting {provider}…"):
                     # Re-generate insights if not already done
@@ -970,7 +968,7 @@ with tab_ai:
         else:
             st.markdown("""
             <div style="text-align:center;padding:40px 0;color:var(--text-dim);">
-                <div style="font-size:2.5rem;margin-bottom:12px;">✨</div>
+                <div style="font-size:2.5rem;margin-bottom:12px;"></div>
                 <div style="font-size:0.9rem;">Click "Generate AI Insights" to get an LLM-powered<br>
                 analysis of your dataset's characteristics.</div>
             </div>
