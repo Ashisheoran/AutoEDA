@@ -5,7 +5,6 @@ class DataLoader:
         self.file = file
 
     def load_data(self):
-        """ Load CSV file into dataframe"""
         try:
             df = pd.read_csv(self.file, on_bad_lines='skip')
             return df
@@ -13,7 +12,6 @@ class DataLoader:
             raise ValueError(f"Error Loading file: {e}")
         
     def basic_info(self,df):
-        """Return basic dataset info"""
         info = {
             "rows": df.shape[0],
             "columns": df.shape[1],

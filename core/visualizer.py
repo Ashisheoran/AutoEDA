@@ -37,6 +37,31 @@ class DataVisualizer:
         fig.update_traces(marker_line_width=1, marker_line_color="#6f102d")
         
         return fig
+    
+    def kde_plot(self, column):
+
+        import plotly.figure_factory as ff
+
+        data = [
+            self.df[column].dropna()
+        ]
+
+        fig = ff.create_distplot(
+            data,
+            [column],
+            show_hist=False,
+            show_rug=False,
+        )
+
+        fig.update_layout(
+            template="plotly_dark",
+            height=500,
+            title=f"KDE Plot - {column}",
+            paper_bgcolor="#0E1117",
+            plot_bgcolor="#0E1117",
+        )
+
+        return fig
 
 
     def  scatter_with_trend(self, x_col, y_col, hue_col=None):
@@ -91,6 +116,23 @@ class DataVisualizer:
             if "trendline" in trace.name.lower():
                 trace.line.color = "#ffd166"
                 trace.line.width = 5
+
+        return fig
+    
+    def line_chart(self, x_col, y_col):
+        fig = px.line(
+            self.df,
+            x=x_col,
+            y=y_col,
+            template="plotly_dark",
+        )
+
+        fig.update_layout(
+            title=f"{y_col} vs {x_col}",
+            height=500,
+            paper_bgcolor="#0E1117",
+            plot_bgcolor="#0E1117",
+        )
 
         return fig
     
@@ -180,18 +222,24 @@ class DataVisualizer:
         fig.update_layout(height=400)
         return fig
     
-    def bubble_chart(self,x_col,y_col,size_col):
-        fig = px.scatter(
+    def count_plot(self, column):
+        fig = px.histogram(
             self.df,
-            x=x_col,
-            y=y_col,
-            size=size_col,
-            title=f"{x_col} vs {y_col} (Bubble Size: {size_col})",
-            template="plotly_dark"
+            x=column,
+            color=column,
+            template="plotly_dark",
         )
 
-        fig.update_layout(height=400)
+        fig.update_layout(
+            title=f"Count Plot - {column}",
+            height=500,
+            paper_bgcolor="#0E1117",
+            plot_bgcolor="#0E1117",
+            showlegend=False,
+        )
+
         return fig
+
 
     def categorical_vs_numeric_box(self, cat_col, num_col):
         fig = px.box(

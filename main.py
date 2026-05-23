@@ -115,14 +115,15 @@ kpi(k5, f"{missing_pct}%", "Missing Data",
 st.markdown("<div style='margin-bottom:28px;'></div>", unsafe_allow_html=True)
 
 
-data_tab, prolile_tab, viz_tab, insights_tab, ml_tab, ai_tab, report_tab= st.tabs([
+data_tab, prolile_tab, viz_tab, insights_tab, ml_tab, ai_tab, report_tab, cleaning_tab = st.tabs([
     "Data Preview",
     "Profile",
     "Visualize",
     "Insights",
     "ML Model",
     "AI Assistant",
-    "Report Download"
+    "Report Download",
+    "Data Cleaning"
 ])
 
 # TAB 1 — Data Preview
@@ -204,7 +205,7 @@ with viz_tab:
             with v1:
                 st.markdown("##### Numeric Distributions\n --- \n")
                 selected_num_col = st.selectbox("Column", numeric_cols, key="viz_col")
-                chart_type = st.radio("Chart", ["Histogram","violin", "Boxplot"], key="num_chart_type")
+                chart_type = st.radio("Chart", ["Histogram","violin", "Boxplot", "KDE"], key="num_chart_type")
             
             with v2:
                 if chart_type == "Histogram":
@@ -224,6 +225,12 @@ with viz_tab:
                     st.markdown(f"##### Violin Plot — `{selected_num_col}`")
                     st.plotly_chart(fig)
 
+                elif chart_type == "KDE":
+                    st.plotly_chart(
+                        visualizer.kde_plot(selected_num_col),
+                        use_container_width=True
+                    )
+
         else:
             st.info("No numeric columns available for distribution charts.")
 
@@ -235,11 +242,13 @@ with viz_tab:
             with v1:
                 st.markdown("##### Categorical Distributions \n --- \n")
                 selected_cat_col = st.selectbox("Column", categorical_cols, key="cat_col")
-                chart_type = st.radio("Chart", ["Bar","pie/donut"],key="cat_chart_type")
+                chart_type = st.radio("Chart", ["Count Plot","pie/donut", "Bar"],key="cat_chart_type")
             with v2:
                 if chart_type == "Bar":
                     st.markdown(f"##### Bar Chart — `{selected_cat_col}`")
                     st.plotly_chart(visualizer.categorical_bar(selected_cat_col))
+                elif chart_type == "Count Plot":
+                    st.plotly_chart(visualizer.count_plot(selected_cat_col))
                 elif chart_type == "pie/donut":
                     p1 , p2 = st.columns(2)
                     with p1:
@@ -308,12 +317,11 @@ with viz_tab:
         if len(numeric_cols) >= 2:
             sc1, sc2= st.columns([1, 3])
             with sc1:
-                st.markdown("##### Scatter Plot")
+                st.markdown("##### Numerical vs Numerical \n --- \n")
                 x_col = st.selectbox("X Axis", numeric_cols, key="x_col")
                 y_col = st.selectbox("Y Axis", numeric_cols,
                                      index=min(1, len(numeric_cols)-1), key="y_col")
             
-
                 def get_best_hue(df, categorical_cols):
                     for col in categorical_cols:
                         if 2 <= df[col].nunique() <= 5:
@@ -326,13 +334,20 @@ with viz_tab:
                     [None] + categorical_cols,
                     index=(categorical_cols.index(auto_hue) + 1) if auto_hue else 0
                 )
+                
+                chart_type = st.radio("Charts", ["Scatter", "Line"])
 
             with sc2:
                 if x_col != y_col:
                     st.markdown(f"`{x_col}` vs `{y_col}`")
-                    st.plotly_chart(visualizer.scatter_with_trend(x_col, y_col, hue_col))
+                    if chart_type == "Scatter":
+                        st.plotly_chart(visualizer.scatter_with_trend(x_col, y_col, hue_col))
+                    elif chart_type == "Line":
+                        st.plotly_chart(visualizer.line_chart(x_col, y_col))
                 else:
                     st.info("Please select different columns for X and Y axes.")
+
+                
         
         else:
             st.info("Need at least 2 numeric columns for scatter plot.")
@@ -584,3 +599,6 @@ with ai_tab:
             mime="text/html"
         )
 
+
+with cleaning_tab:
+    st.info("Data cleaning features coming soon!")
