@@ -1,7 +1,7 @@
 import pandas as pd
 
 class DataProfiler:
-    def __init__(self,df: pd.DataFrame):
+    def __init__(self,df):
         self.df = df
     
     def get_dtypes(self):

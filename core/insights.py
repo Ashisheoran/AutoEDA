@@ -3,10 +3,9 @@ import numpy as np
 
 
 class InsightEngine:
-    def __init__(self, df: pd.DataFrame):
+    def __init__(self, df):
         self.df = df
 
-    # 1. Correlation Insights
     def correlation_insights(self, threshold=0.7):
         corr = self.df.corr(numeric_only=True)
         insights = []
@@ -23,9 +22,8 @@ class InsightEngine:
                             f"Strong {relation} correlation between {col1} and {col2} ({value:.2f})"
                         )
 
-        return list(set(insights))  # remove duplicates
+        return list(set(insights))
 
-    # 2. Missing Value Insights
     def missing_insights(self):
         insights = []
         missing_percent = (self.df.isnull().sum() / len(self.df)) * 100
@@ -38,7 +36,6 @@ class InsightEngine:
 
         return insights
 
-    # 3. Skewness Insights
     def skewness_insights(self):
         insights = []
         numeric_cols = self.df.select_dtypes(include=np.number)
@@ -53,7 +50,6 @@ class InsightEngine:
 
         return insights
 
-    # 4. Outlier Detection (IQR)
     def outlier_insights(self):
         insights = []
         numeric_cols = self.df.select_dtypes(include=np.number)
@@ -75,7 +71,7 @@ class InsightEngine:
 
         return insights
 
-    # Combine all insights
+
     def generate_all_insights(self):
         return {
             "correlation": self.correlation_insights(),
