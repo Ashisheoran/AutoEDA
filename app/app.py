@@ -30,7 +30,7 @@ from core.insights import InsightEngine
 from core.ml_engine import MLEngine
 from core.ai_assistant import AIAssistant
 from core.report_generator import ReportGenerator
-from app.ui_helper import load_css
+from ui_helper import load_css
 
 load_css()
 
