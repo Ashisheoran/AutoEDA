@@ -18,9 +18,7 @@ class ReportGenerator:
         self.ml_results = ml_results
         self.ai_summary = ai_summary
 
-    # ─────────────────────────────────────
-    # GENERATE FULL HTML REPORT
-    # ─────────────────────────────────────
+
     def generate_html_report(self):
 
         html = f"""
@@ -98,9 +96,7 @@ class ReportGenerator:
         </div>
         """
 
-        # ─────────────────────────────────────
-        # DATA PREVIEW
-        # ─────────────────────────────────────
+
         html += """
         <div class="card">
             <h2>Data Preview</h2>
@@ -110,9 +106,6 @@ class ReportGenerator:
 
         html += "</div>"
 
-        # ─────────────────────────────────────
-        # MISSING VALUES
-        # ─────────────────────────────────────
         missing = self.df.isnull().sum()
 
         missing_df = pd.DataFrame({
@@ -129,9 +122,6 @@ class ReportGenerator:
 
         html += "</div>"
 
-        # ─────────────────────────────────────
-        # SUMMARY STATS
-        # ─────────────────────────────────────
         html += """
         <div class="card">
             <h2>Statistical Summary</h2>
@@ -141,9 +131,7 @@ class ReportGenerator:
 
         html += "</div>"
 
-        # ─────────────────────────────────────
-        # INSIGHTS
-        # ─────────────────────────────────────
+
         html += """
         <div class="card">
             <h2>Insights</h2>
@@ -165,9 +153,7 @@ class ReportGenerator:
 
         html += "</div>"
 
-        # ─────────────────────────────────────
-        # ML RESULTS
-        # ─────────────────────────────────────
+
         if self.ml_results:
 
             html += """
@@ -193,9 +179,7 @@ class ReportGenerator:
 
             html += "</div>"
 
-        # ─────────────────────────────────────
-        # AI SUMMARY
-        # ─────────────────────────────────────
+
         if self.ai_summary:
 
             html += """
@@ -209,9 +193,7 @@ class ReportGenerator:
 
             html += "</div>"
 
-        # ─────────────────────────────────────
-        # CHARTS
-        # ─────────────────────────────────────
+
         if self.charts:
 
             html += """

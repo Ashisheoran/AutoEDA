@@ -115,7 +115,7 @@ kpi(k5, f"{missing_pct}%", "Missing Data",
 st.markdown("<div style='margin-bottom:28px;'></div>", unsafe_allow_html=True)
 
 
-data_tab, prolile_tab, viz_tab, insights_tab, ml_tab, ai_tab, report_tab, cleaning_tab = st.tabs([
+data_tab, prolile_tab, viz_tab, insights_tab, ml_tab, ai_tab, report_tab= st.tabs([
     "Data Preview",
     "Profile",
     "Visualize",
@@ -123,7 +123,6 @@ data_tab, prolile_tab, viz_tab, insights_tab, ml_tab, ai_tab, report_tab, cleani
     "ML Model",
     "AI Assistant",
     "Report Download",
-    "Data Cleaning"
 ])
 
 # TAB 1 — Data Preview
@@ -599,6 +598,3 @@ with ai_tab:
             mime="text/html"
         )
 
-
-with cleaning_tab:
-    st.info("Data cleaning features coming soon!")
