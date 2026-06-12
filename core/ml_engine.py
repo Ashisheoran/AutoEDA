@@ -32,14 +32,14 @@ class MLEngine:
         if problem_type == "regression":
             return {
                 "Linear Regression": LinearRegression(),
-                "Random Forest": RandomForestRegressor(random_state=42),
+                "Random Forest": RandomForestRegressor(n_estimators=50, random_state=42, n_jobs=-1),
                 "Decision Tree": DecisionTreeRegressor(random_state=42),
             }
 
         else:
             return {
                 "Logistic Regression": LogisticRegression(max_iter=1000),
-                "Random Forest": RandomForestClassifier(random_state=42),
+                "Random Forest": RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1),
                 "Decision Tree": DecisionTreeClassifier(random_state=42),
             }
         
@@ -80,27 +80,45 @@ class MLEngine:
             model.fit(X_train, y_train)
             preds = model.predict(X_test)
 
+            feature_importance = None
+
+            if hasattr(model, "feature_importances_"):
+                feature_importance = pd.DataFrame({
+                    "Feature": X.columns,
+                    "Importance": model.feature_importances_
+                }).sort_values(
+                    "Importance",
+                    ascending=False
+                ).head(10)
+
             if problem_type == "regression":
 
                 r2 = r2_score(y_test, preds)
                 mse = mean_squared_error(y_test, preds)
                 model_result = {
                     "Model": name,
-                    "r2": round(r2, 4),
-                    "mse": round(mse, 4)
+                    "R2 Score": round(r2, 4),
+                    "MSE": round(mse, 4),
+                    "Feature Importance": feature_importance
                 }
 
                 score = r2
 
             else:
                 accuracy = accuracy_score(y_test, preds)
-                report = classification_report(y_test, preds)
+                report_dict = classification_report(y_test, preds, output_dict=True)
+                report_text = classification_report(y_test, preds)
 
                 model_result = {
                     "Model": name,
                     "Accuracy": round(accuracy, 4),
-                    "Report": report,
+                    "Precision": round(report_dict["weighted avg"]["precision"], 4),
+                    "Recall": round(report_dict["weighted avg"]["recall"], 4),
+                    "F1 Score": round(report_dict["weighted avg"]["f1-score"], 4),
+                    "Report": report_text,  # text version
+                    "Feature Importance": feature_importance
                 }
+
                 score = accuracy
 
             results.append(model_result)
@@ -109,6 +127,15 @@ class MLEngine:
                 best_score = score
                 best_model = name
                 best_result = model_result
+
+            if hasattr(model, "feature_importances_"):
+                importance = pd.DataFrame({
+                    "Feature": X.columns,
+                    "Importance": model.feature_importances_
+                }).sort_values(
+                    "Importance",
+                    ascending=False
+                ).head(10)
 
         return {
             "type": problem_type,

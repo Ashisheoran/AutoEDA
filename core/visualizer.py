@@ -11,7 +11,7 @@ class DataVisualizer:
         fig = px.histogram(
             self.df,
             x=column,
-            nbins=20,
+            nbins=min(50, max(10, len(self.df) // 100)),
             title=f"{column} Distriburtion",
             template="ggplot2",
             marginal='rug',
@@ -66,6 +66,8 @@ class DataVisualizer:
 
     def  scatter_with_trend(self, x_col, y_col, hue_col=None):
 
+        if self.df.shape[0] > 5000:
+            df = self.df.sample(n=5000, random_state=42)
         df = self.df.copy()
 
         df = df[[x_col, y_col] + ([hue_col] if hue_col else [])].dropna()
@@ -147,6 +149,7 @@ class DataVisualizer:
             corr,
             text_auto=True,
             color_continuous_scale="RdBu",
+            color_continuous_midpoint=0,
             title="Correlation Heatmap"
         )
 
@@ -173,11 +176,13 @@ class DataVisualizer:
         if numeric_df.shape[1] < 2:
             return None
         
-        fig = sns.pairplot(numeric_df.iloc[:, :4])
+        sample_df = numeric_df.sample(n=min(1000, len(numeric_df)), random_state=42)
+
+        fig = sns.pairplot(sample_df.iloc[:, :4])
         return fig
 
     def categorical_bar(self, column):
-        data = self.df[column].value_counts().reset_index()
+        data = self.df[column].value_counts().head(15).reset_index()
         data.columns = [column, "count"]
 
         fig = px.bar(
@@ -192,7 +197,7 @@ class DataVisualizer:
         return fig
     
     def pie_chart(self, column):
-        data = self.df[column].value_counts().reset_index()
+        data = self.df[column].value_counts().head(10).reset_index()
         data.columns = [column, "count"]
 
         fig = px.pie(
@@ -207,7 +212,7 @@ class DataVisualizer:
         return fig
     
     def donut_chart(self, column):
-        data = self.df[column].value_counts().reset_index()
+        data = self.df[column].value_counts().head(10).reset_index()
         data.columns = [column, "count"]
 
         fig = px.pie(
@@ -223,25 +228,30 @@ class DataVisualizer:
         return fig
     
     def count_plot(self, column):
-        fig = px.histogram(
-            self.df,
+
+        if column is None:
+            return None
+        if column not in self.df.columns:
+            return None
+
+        data = self.df[column].astype(str).value_counts().head(20).reset_index()
+        
+        data.columns = [column, "count"]
+
+        fig = px.bar(
+            data,
             x=column,
             color=column,
             template="plotly_dark",
-        )
-
-        fig.update_layout(
-            title=f"Count Plot - {column}",
-            height=500,
-            paper_bgcolor="#0E1117",
-            plot_bgcolor="#0E1117",
-            showlegend=False,
         )
 
         return fig
 
 
     def categorical_vs_numeric_box(self, cat_col, num_col):
+        if self.df[cat_col].nunique() > 50:
+            return None
+        
         fig = px.box(
             self.df,
             x = cat_col,
@@ -253,6 +263,9 @@ class DataVisualizer:
         return fig
     
     def categorical_vs_numeric_violin(self, cat_col, num_col):
+        if self.df[cat_col].nunique() > 50:
+            return None
+        
         fig = px.violin(
             self.df,
             x = cat_col,
@@ -265,7 +278,9 @@ class DataVisualizer:
         return fig
 
     def categorical_mean(self, cat_col, num_col):
-        data = self.df.groupby(cat_col)[num_col].mean().reset_index()
+        top_categories = self.df[cat_col].value_counts().head(20).index
+        filtered_df = self.df[self.df[cat_col].isin(top_categories)]
+        data = filtered_df.groupby(cat_col)[num_col].mean().reset_index()
         fig = px.bar(
             data,
             x = cat_col,
@@ -278,7 +293,7 @@ class DataVisualizer:
 
 
     def categorical_vs_categorical_bar(self, col1, col2):
-        df_count = self.df.groupby([col1,col2]).size().reset_index(name='count')
+        df_count = self.df.groupby([col1,col2]).size().head(20).reset_index(name='count')
 
         fig = px.bar(
             df_count,
@@ -293,7 +308,7 @@ class DataVisualizer:
         return fig
 
     def categorical_vs_categorical_stacked(self,col1, col2):
-        df_count = self.df.groupby([col1,col2]).size().reset_index(name='count')
+        df_count = self.df.groupby([col1,col2]).size().head(20).reset_index(name='count')
 
         fig = px.bar(
             df_count,

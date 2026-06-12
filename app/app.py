@@ -265,20 +265,28 @@ with viz_tab:
             v1, v2 = st.columns([1,3])
             with v1:
                 st.markdown("##### Categorical vs Numeical\n --- \n")
+                
                 selected_cat_col = st.selectbox("Select Categorical column", categorical_cols)
                 selected_num_col = st.selectbox("Select Numeric column", numeric_cols)
                 chart_type = st.radio("Chart",['Boxplot','Average Bar', 'Violin'], key="cat_num_chart_type")
             with v2:
                 if chart_type == "Boxplot":
-                    st.markdown(f"##### Boxplot — `{selected_cat_col}` vs `{selected_num_col}`")
-                    st.plotly_chart(visualizer.categorical_vs_numeric_box(selected_cat_col, selected_num_col))
-
+                    fig = visualizer.categorical_vs_numeric_box(selected_cat_col, selected_num_col)
+                    if fig:
+                        st.markdown(f"##### Boxplot — `{selected_cat_col}` vs `{selected_num_col}`")
+                        st.plotly_chart(fig)
+                    else:
+                        st.info("Too many unique categories for visualization.")
                 elif chart_type == "Average Bar":
                     st.markdown(f"##### Average Bar Chart — `{selected_cat_col}` vs `{selected_num_col}`")
                     st.plotly_chart(visualizer.categorical_mean(selected_cat_col, selected_num_col))
                 elif chart_type == "Violin":
-                    st.markdown(f"##### Violin Plot — `{selected_cat_col}` vs `{selected_num_col}`")
-                    st.plotly_chart(visualizer.categorical_vs_numeric_violin(selected_cat_col, selected_num_col))
+                    fig = visualizer.categorical_vs_numeric_violin(selected_cat_col, selected_num_col)
+                    if fig:
+                        st.markdown(f"##### Violin Plot — `{selected_cat_col}` vs `{selected_num_col}`")
+                        st.plotly_chart(fig)
+                    else:
+                        st.info("Too many unique categories for visualization.")
         else:
             st.info("Need at least one numeric and one categorical column for combined charts.")
             
@@ -393,6 +401,7 @@ with insights_tab:
         "correlation":("ok"),
         "cardinality":("warn"),
         "duplicate":  ("error"),
+        "datatypes":  ("warn")
     }
 
     total_insights = sum(len(v) for v in insights.values())
@@ -419,12 +428,13 @@ with insights_tab:
                             <span>{item}</span>
                         </div>
                         """, unsafe_allow_html=True)
-                st.markdown("""
-                <div class="insight-item ok">
-                    <div class="insight-dot ok"></div>
-                    <span>No significant issues detected in this category.</span>
-                </div>
-                """, unsafe_allow_html=True)
+                else:
+                    st.markdown("""
+                    <div class="insight-item ok">
+                        <div class="insight-dot ok"></div>
+                        <span>No significant issues detected in this category.</span>
+                    </div>
+                    """, unsafe_allow_html=True)
     
 
 
@@ -454,43 +464,52 @@ with ml_tab:
                     st.session_state["ml_results"] = results
                     
                 model_type = results.get("type", "unknown")
-                badge_color = "var(--accent)" if model_type == "regression" else "var(--accent2)"
+                best_result = results["best_result"]
+                best_model = results["best_model"]
 
-                st.markdown(f"""
+
+                t1, t2 = st.columns([1, 3])
+                t1.markdown(f"""
                     <div style="margin:30px 0">
                         <span class="chip {'purple' if model_type != 'regression' else ''}"> {model_type.upper()}</span>
                         <span>Model trained</span>
                     </div>
                 """, unsafe_allow_html=True)
-                    
 
-                best_result = results["best_result"]
+                t2.success(
+                    f"Best Model: {results['best_model']} "
+                    f"({results['best_score']})"
+                )
+
 
                 if results["type"] == "regression":
 
                     c1, c2 = st.columns(2)
 
-                    c1.metric("R² Score", best_result["r2"])
-                    c2.metric("MSE", best_result["mse"])
+                    c1.metric("R² Score", best_result["R2 Score"])
+                    c2.metric("MSE", f"{best_result['MSE']:,.2f}")
 
                 else:
                     ca, cb = st.columns([2,3])
                     ca.metric("Accuracy", best_result["Accuracy"])
 
                     cb.markdown("### Classification Report")
-
                     cb.code(best_result["Report"])
 
                 st.markdown("#### Model Comparison")
-
                 results_df = pd.DataFrame(results["results"])
-
+                results_df = results_df.drop(columns=["Report", "Feature Importance"], errors="ignore")
                 st.dataframe(results_df)
 
-                st.success(
-                    f"Best Model: {results['best_model']} "
-                    f"({results['best_score']})"
-                )
+                importance_df = best_result.get("Feature Importance")
+                if importance_df is not None and not importance_df.empty:
+                    st.markdown("#### Top Features")
+                    
+                    f1, f2 = st.columns([1, 2])
+                    f1.dataframe(importance_df)
+                    f2.bar_chart(importance_df.set_index("Feature"))
+
+
 
 
 # TAB 6 — AI Assistant
@@ -537,64 +556,67 @@ with ai_tab:
                 </div>
                 """, unsafe_allow_html=True)
     
+# TAB 6 — report download
+
 
     with report_tab:
-        report_charts = []
-        visualizer = DataVisualizer(df)
+        st.markdown('Updating soon... Stay tuned for the next release!')
+    #     report_charts = []
+    #     visualizer = DataVisualizer(df)
 
-        numeric_cols = df.select_dtypes(include="number").columns.tolist()
-        categorical_cols = df.select_dtypes(exclude="number").columns.tolist()
+    #     numeric_cols = df.select_dtypes(include="number").columns.tolist()
+    #     categorical_cols = df.select_dtypes(exclude="number").columns.tolist()
             
-        if numeric_cols:
-            report_charts.append(visualizer.histogram(numeric_cols[0]))
-            report_charts.append(visualizer.boxplot(numeric_cols[0]))
-            report_charts.append(visualizer.violin_plot(numeric_cols[0]))
+    #     if numeric_cols:
+    #         report_charts.append(visualizer.histogram(numeric_cols[0]))
+    #         report_charts.append(visualizer.boxplot(numeric_cols[0]))
+    #         report_charts.append(visualizer.violin_plot(numeric_cols[0]))
 
 
-        if len(numeric_cols) >= 2:
-            heatmap = visualizer.correlation_heatmap()
-            report_charts.append(visualizer.scatter_with_trend(numeric_cols[0], numeric_cols[1]))
+    #     if len(numeric_cols) >= 2:
+    #         heatmap = visualizer.correlation_heatmap()
+    #         report_charts.append(visualizer.scatter_with_trend(numeric_cols[0], numeric_cols[1]))
 
-            if heatmap:
-                report_charts.append(heatmap)
+    #         if heatmap:
+    #             report_charts.append(heatmap)
 
-        if categorical_cols:
-            report_charts.append(visualizer.categorical_bar(categorical_cols[0]))
-            report_charts.append(visualizer.pie_chart(categorical_cols[0]))
-            report_charts.append(visualizer.donut_chart(categorical_cols[0]))
+    #     if categorical_cols:
+    #         report_charts.append(visualizer.categorical_bar(categorical_cols[0]))
+    #         report_charts.append(visualizer.pie_chart(categorical_cols[0]))
+    #         report_charts.append(visualizer.donut_chart(categorical_cols[0]))
 
-        if categorical_cols and numeric_cols:
-            report_charts.append(visualizer.categorical_vs_numeric_box(categorical_cols[0], numeric_cols[0]))
-            report_charts.append(visualizer.categorical_mean(categorical_cols[0], numeric_cols[0]))
-            report_charts.append(visualizer.categorical_vs_numeric_violin(categorical_cols[0], numeric_cols[0]))
+    #     if categorical_cols and numeric_cols:
+    #         report_charts.append(visualizer.categorical_vs_numeric_box(categorical_cols[0], numeric_cols[0]))
+    #         report_charts.append(visualizer.categorical_mean(categorical_cols[0], numeric_cols[0]))
+    #         report_charts.append(visualizer.categorical_vs_numeric_violin(categorical_cols[0], numeric_cols[0]))
 
-        if len(categorical_cols) >= 2:
-            report_charts.append(visualizer.categorical_vs_categorical_bar(categorical_cols[0], categorical_cols[1]))
-            report_charts.append(visualizer.categorical_vs_categorical_stacked(categorical_cols[0], categorical_cols[1]))
-            report_charts.append(visualizer.categorical_heatmap(categorical_cols[0], categorical_cols[1]))
+    #     if len(categorical_cols) >= 2:
+    #         report_charts.append(visualizer.categorical_vs_categorical_bar(categorical_cols[0], categorical_cols[1]))
+    #         report_charts.append(visualizer.categorical_vs_categorical_stacked(categorical_cols[0], categorical_cols[1]))
+    #         report_charts.append(visualizer.categorical_heatmap(categorical_cols[0], categorical_cols[1]))
         
-        ml_results = None
-        if "ml_results" in st.session_state:
-            ml_results = st.session_state["ml_results"]
+    #     ml_results = None
+    #     if "ml_results" in st.session_state:
+    #         ml_results = st.session_state["ml_results"]
         
-        ai_summary = None
-        if "ai_summary" in st.session_state:
-            ai_summary = st.session_state["ai_summary"]
+    #     ai_summary = None
+    #     if "ai_summary" in st.session_state:
+    #         ai_summary = st.session_state["ai_summary"]
 
-        report_generator = ReportGenerator(
-            df=df,
-            insights=insights,
-            charts=report_charts,
-            ml_results=ml_results,
-            ai_summary=ai_summary
-        )
+    #     report_generator = ReportGenerator(
+    #         df=df,
+    #         insights=insights,
+    #         charts=report_charts,
+    #         ml_results=ml_results,
+    #         ai_summary=ai_summary
+    #     )
 
-        report_html = report_generator.generate_html_report()
+    #     report_html = report_generator.generate_html_report()
 
-        st.download_button(
-            label="📄 Download HTML Report",
-            data=report_html,
-            file_name="autoeda_report.html",
-            mime="text/html"
-        )
+    #     st.download_button(
+    #         label="📄 Download HTML Report",
+    #         data=report_html,
+    #         file_name="autoeda_report.html",
+    #         mime="text/html"
+    #     )
 

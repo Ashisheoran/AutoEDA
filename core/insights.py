@@ -71,6 +71,67 @@ class InsightEngine:
 
         return insights
 
+    def cardinality_insights(self):
+        insights = []
+
+        for col in self.df.select_dtypes(exclude=np.number).columns:
+
+            unique_pct = (
+                self.df[col].nunique() /
+                len(self.df)
+            ) * 100
+
+            if unique_pct > 80:
+                insights.append(
+                    f"{col} appears to be an identifier or high-cardinality column."
+                )
+
+        return insights
+
+    def constant_column_insights(self):
+        insights = []
+
+        for col in self.df.columns:
+            if self.df[col].nunique() == 1:
+                insights.append(
+                    f"{col} contains only one unique value."
+                )
+
+        return insights
+
+    def duplicate_insights(self):
+
+        duplicates = self.df.duplicated().sum()
+
+        if duplicates > 0:
+            return [
+                f"Dataset contains {duplicates} duplicate rows."
+            ]
+
+        return []
+
+    def datatype_insights(self):
+        insights = []
+
+        for col in self.df.columns:
+
+            if self.df[col].dtype == "object":
+
+                numeric_ratio = (
+                    pd.to_numeric(
+                        self.df[col],
+                        errors="coerce"
+                    )
+                    .notna()
+                    .mean()
+                )
+
+                if numeric_ratio > 0.8:
+                    insights.append(
+                        f"{col} may be stored as text instead of numeric."
+                    )
+
+        return insights
 
     def generate_all_insights(self):
         return {
@@ -78,4 +139,8 @@ class InsightEngine:
             "missing": self.missing_insights(),
             "skewness": self.skewness_insights(),
             "outliers": self.outlier_insights(),
+            "cardinality": self.cardinality_insights(),
+            "constant_columns": self.constant_column_insights(),
+            "duplicates": self.duplicate_insights(),
+            "datatypes": self.datatype_insights()
         }
