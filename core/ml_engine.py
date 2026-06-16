@@ -82,14 +82,6 @@ class MLEngine:
 
             feature_importance = None
 
-            if hasattr(model, "feature_importances_"):
-                feature_importance = pd.DataFrame({
-                    "Feature": X.columns,
-                    "Importance": model.feature_importances_
-                }).sort_values(
-                    "Importance",
-                    ascending=False
-                ).head(10)
 
             if problem_type == "regression":
 

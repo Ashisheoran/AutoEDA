@@ -37,7 +37,7 @@ load_css()
 with st.sidebar:
 
     st.markdown('<div class="sidebar-section">Upload Dataset</div>', unsafe_allow_html=True)
-    uploaded_file = st.file_uploader("", type=["csv"], label_visibility="collapsed")
+    uploaded_file = st.file_uploader("", type=["csv","xlsx","xls","json"], label_visibility="collapsed")
 
     if uploaded_file:
         st.markdown('<div class="sidebar-section">Dataset Info</div>', unsafe_allow_html=True)
@@ -115,11 +115,12 @@ kpi(k5, f"{missing_pct}%", "Missing Data",
 st.markdown("<div style='margin-bottom:28px;'></div>", unsafe_allow_html=True)
 
 
-data_tab, prolile_tab, viz_tab, insights_tab, ml_tab, ai_tab, report_tab= st.tabs([
+data_tab, prolile_tab, viz_tab, insights_tab, clean_tab, ml_tab, ai_tab, report_tab= st.tabs([
     "Data Preview",
     "Profile",
     "Visualize",
     "Insights",
+    "Data Cleaning",
     "ML Model",
     "AI Assistant",
     "Report Download",
@@ -437,8 +438,119 @@ with insights_tab:
                     """, unsafe_allow_html=True)
     
 
+# TAB 5 — Data Cleaning
+with clean_tab:
+    if "cleaned_df" not in st.session_state:
+        st.session_state["cleaned_df"] = df.copy()
 
-# TAB 5 — ML Model
+    cleaned_df = st.session_state["cleaned_df"]
+
+    c1, c2 = st.columns([7, 1])
+    with c1:
+        if st.button("⟳ Refresh"):
+            pass
+    with c2: 
+        csv = cleaned_df.to_csv(index=False).encode('utf-8')
+        st.download_button("Export Cleaned Data", data=csv, file_name="cleaned_data.csv", mime="text/csv")
+
+    dc1, dc2 = st.columns(2)
+
+    with dc1:
+        st.subheader("Missing Values")
+        missing_cols = [col for col in cleaned_df.columns if cleaned_df[col].isnull().sum() > 0]
+        if missing_cols:
+            column = st.selectbox("Select column to clean", missing_cols, key="clean_col")
+            
+            method = st.selectbox("Imputation method", ["Mean", "Median", "Mode"], key="impute_method")
+            if st.button("Fill Missing Values"):
+                if column not in cleaned_df.columns:
+                    st.error("Selected column not found in dataset.")
+                elif cleaned_df[column].isnull().sum() == 0:
+                    st.info("No missing values in selected column.")
+                else:
+                    if method == "Mean":
+                        imputed_value = cleaned_df[column].mean()
+                    elif method == "Median":
+                        imputed_value = cleaned_df[column].median()
+                    elif method == "Mode":
+                        imputed_value = cleaned_df[column].mode()[0]
+
+                    cleaned_df[column] = cleaned_df[column].fillna(imputed_value)
+                    st.success(f"Missing values in `{column}` imputed with {method.lower()} value: {imputed_value:.2f}")
+                st.session_state["cleaned_df"] = cleaned_df
+        else:
+            st.info("No columns with missing values.")
+        
+        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+
+        st.subheader("Duplicate Rows")
+        duplicates = cleaned_df.duplicated().sum()
+        st.metric("Duplicate Rows", duplicates)
+
+        if duplicates > 0:
+            if st.button("Remove Duplicates"):
+                cleaned_df = cleaned_df.drop_duplicates()
+                st.success(f"Removed {duplicates} duplicate rows.")
+                st.session_state["cleaned_df"] = cleaned_df
+        
+        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+
+        st.subheader("Constant Columns")
+        constant_cols = [col for col in cleaned_df.columns if cleaned_df[col].nunique(dropna=False) <= 1]
+        if constant_cols:
+            st.write("Columns with constant values:")
+            for col in constant_cols:
+                st.code(col)
+            if st.button("Remove Constant Columns"):
+                cleaned_df = cleaned_df.drop(columns=constant_cols)
+                st.success(f"Removed {len(constant_cols)} constant columns.")
+                st.session_state["cleaned_df"] = cleaned_df
+
+        else:
+            st.info("No columns with constant values.")
+
+
+    with dc2:    
+        st.subheader("Drop Columns")
+        drop_cols = st.multiselect("Columns to Drop", cleaned_df.columns, key="drop_cols")
+        if st.button("Drop Selected Columns"):
+            if drop_cols:
+                cleaned_df = cleaned_df.drop(columns=drop_cols)
+                new_duplicates = cleaned_df.duplicated().sum()
+
+                st.success(f"{len(drop_cols)} Columns Dropped: {', '.join(drop_cols)}")
+                
+                if new_duplicates > 0:
+                    st.warning(
+                        f"⚠️ {new_duplicates} duplicate rows detected after dropping columns. "
+                        "This can occur when a unique identifier column (e.g., CustomerID) is removed."
+                    )
+                st.session_state["cleaned_df"] = cleaned_df
+            else:
+                st.info("No columns selected for dropping.")
+
+
+        cleaned_df = st.session_state.get("cleaned_df", df)
+
+        st.markdown('<hr class="section-divider">', unsafe_allow_html=True)
+        
+        st.subheader("Rename Column")
+        old_col = st.selectbox("Select column to rename", cleaned_df.columns, key="rename_col")
+        new_col = st.text_input("New Name", key="new_col").strip()
+    
+        if st.button("Rename Column"):
+            if old_col and new_col:
+                cleaned_df = cleaned_df.rename(columns={old_col: new_col})
+                st.success(f"Column `{old_col}` renamed to `{new_col}`.")
+                st.session_state["cleaned_df"] = cleaned_df
+            else:
+                st.warning("Please enter both old and new column names.")
+
+
+
+
+
+# TAB 6 — ML Model
 
 with ml_tab:
     numeric_cols = df.select_dtypes(include="number").columns
@@ -512,111 +624,165 @@ with ml_tab:
 
 
 
-# TAB 6 — AI Assistant
+# TAB 7 — AI Assistant
 
 with ai_tab:
-    ai1, ai2 = st.columns([1, 2])
+
+    ai1, ai2 = st.columns([2, 3])
 
     with ai1:
- 
-        current_provider = st.session_state.get("ai_provider_label", provider)
-        st.markdown(f"""
-        <div class="sidebar-stat" style="margin-top:8px;">
-            <span>Provider</span>
-            <span class="sidebar-stat-val">{provider}</span>
-        </div>
-        <div class="sidebar-stat">
-            <span>API Key</span>
-            <span class="sidebar-stat-val">{'Set' if api_key else 'Missing'}</span>
-        </div>
-        """, unsafe_allow_html=True)
+        selected_prompt = st.selectbox(
+            "Select a question to ask about your dataset:",
+            [
+                "Provide an executive summary of the dataset.",
+                "Provide business insights and trends from the dataset",
+                "What are the most important insights from the dataset?",
+                "Are there any issues with data quality?",
+                "Is this dataset ready for machine learning?",
+                "What preprocessing steps would you recommend?",
+                "Can you summarize the ML model results?"
+            ],
+            key="preset_prompts"
+        )
+        st.markdown("---")
 
-        gen_btn = st.button("Generate AI Insights")
+        user_prompt = st.text_area(
+            "Ask a Question about your dataset or model:",
+            placeholder="Example: Is this dataset ready for machine learning?"
+        )
+
+        custom_btn = st.button("Generate Response")
 
     with ai2:
-        if gen_btn:
-            if not api_key or api_key.strip() == "":
-                st.warning("Please enter a valid API key in the sidebar.")
-            else:
-                with st.spinner(f"Thinking..."):
+        if custom_btn:
+            if user_prompt.strip():
+                selected_prompt = user_prompt
 
-                    all_insights = st.session_state.get("insights")
 
-                    if not all_insights:
-                        engine = InsightEngine(df)
-                        all_insights = engine.generate_all_insights()
 
-                    assistant = AIAssistant(provider, api_key.strip())
-                    ai_output = assistant.generate_summary(all_insights)
-                    st.session_state["ai_summary"] = ai_output
+            if selected_prompt:
 
-                st.markdown(f"""
-                <div class="ai-output">
-                    {ai_output.replace(chr(10), '<br>')}
-                </div>
-                """, unsafe_allow_html=True)
+                if not api_key or api_key.strip() == "":
+                    st.warning(
+                        "Please enter a valid API key in the sidebar."
+                    )
+
+                else:
+
+                    with st.spinner("Analyzing dataset..."):
+
+                        all_insights = st.session_state.get("insights")
+
+                        if not all_insights:
+                            engine = InsightEngine(df)
+                            all_insights = engine.generate_all_insights()
+
+                        assistant = AIAssistant(
+                            provider,
+                            api_key.strip()
+                        )
+                        dataset_info = {
+                        "Rows": len(df),
+                        "Columns": len(df.columns),
+                        "Missing Values": int(df.isnull().sum().sum()),
+                        "Duplicate Rows": int(df.duplicated().sum())
+                        }
+
+                        ai_output = assistant.generate_summary(
+                            insights=all_insights,
+                            dataset_info=dataset_info,
+                            ml_results=st.session_state.get("ml_results"),
+                            custom_prompt=selected_prompt
+                        )
+
+                        st.session_state["ai_summary"] = ai_output
+
+                    st.markdown(ai_output)
+
     
-# TAB 6 — report download
-
+# TAB 8 — report download
 
     with report_tab:
-        st.markdown('Updating soon... Stay tuned for the next release!')
-    #     report_charts = []
-    #     visualizer = DataVisualizer(df)
 
-    #     numeric_cols = df.select_dtypes(include="number").columns.tolist()
-    #     categorical_cols = df.select_dtypes(exclude="number").columns.tolist()
-            
-    #     if numeric_cols:
-    #         report_charts.append(visualizer.histogram(numeric_cols[0]))
-    #         report_charts.append(visualizer.boxplot(numeric_cols[0]))
-    #         report_charts.append(visualizer.violin_plot(numeric_cols[0]))
+        report_charts = []
+
+        visualizer = DataVisualizer(df)
+
+        numeric_cols = df.select_dtypes(
+            include="number"
+        ).columns.tolist()
+
+        categorical_cols = df.select_dtypes(
+            exclude="number"
+        ).columns.tolist()
 
 
-    #     if len(numeric_cols) >= 2:
-    #         heatmap = visualizer.correlation_heatmap()
-    #         report_charts.append(visualizer.scatter_with_trend(numeric_cols[0], numeric_cols[1]))
+        # Distribution Chart
+        if numeric_cols:
+            report_charts.append(
+                visualizer.histogram(
+                    numeric_cols[0]
+                )
+            )
 
-    #         if heatmap:
-    #             report_charts.append(heatmap)
 
-    #     if categorical_cols:
-    #         report_charts.append(visualizer.categorical_bar(categorical_cols[0]))
-    #         report_charts.append(visualizer.pie_chart(categorical_cols[0]))
-    #         report_charts.append(visualizer.donut_chart(categorical_cols[0]))
+        # Scatter + Correlation
+        if len(numeric_cols) >= 2:
 
-    #     if categorical_cols and numeric_cols:
-    #         report_charts.append(visualizer.categorical_vs_numeric_box(categorical_cols[0], numeric_cols[0]))
-    #         report_charts.append(visualizer.categorical_mean(categorical_cols[0], numeric_cols[0]))
-    #         report_charts.append(visualizer.categorical_vs_numeric_violin(categorical_cols[0], numeric_cols[0]))
+            report_charts.append(
+                visualizer.scatter_with_trend(
+                    numeric_cols[0],
+                    numeric_cols[1]
+                )
+            )
 
-    #     if len(categorical_cols) >= 2:
-    #         report_charts.append(visualizer.categorical_vs_categorical_bar(categorical_cols[0], categorical_cols[1]))
-    #         report_charts.append(visualizer.categorical_vs_categorical_stacked(categorical_cols[0], categorical_cols[1]))
-    #         report_charts.append(visualizer.categorical_heatmap(categorical_cols[0], categorical_cols[1]))
+            heatmap = visualizer.correlation_heatmap()
+
+            if heatmap:
+                report_charts.append(heatmap)
+
+
+        # Main Categorical Distribution
+        if categorical_cols:
+
+            report_charts.append(
+                visualizer.categorical_bar(
+                    categorical_cols[0]
+                )
+            )
+
+
+        # Categorical vs Numeric
+        if categorical_cols and numeric_cols:
+
+            report_charts.append(
+                visualizer.categorical_vs_numeric_box(
+                    categorical_cols[0],
+                    numeric_cols[0]
+                )
+            )
+        ml_results = None
+        if "ml_results" in st.session_state:
+            ml_results = st.session_state["ml_results"]
         
-    #     ml_results = None
-    #     if "ml_results" in st.session_state:
-    #         ml_results = st.session_state["ml_results"]
-        
-    #     ai_summary = None
-    #     if "ai_summary" in st.session_state:
-    #         ai_summary = st.session_state["ai_summary"]
+        ai_summary = None
+        if "ai_summary" in st.session_state:
+            ai_summary = st.session_state["ai_summary"]
 
-    #     report_generator = ReportGenerator(
-    #         df=df,
-    #         insights=insights,
-    #         charts=report_charts,
-    #         ml_results=ml_results,
-    #         ai_summary=ai_summary
-    #     )
+        report_generator = ReportGenerator(
+            df=df,
+            insights=insights,
+            charts=report_charts,
+            ml_results=ml_results,
+            ai_summary=ai_summary
+        )
 
-    #     report_html = report_generator.generate_html_report()
+        report_html = report_generator.generate_html_report()
 
-    #     st.download_button(
-    #         label="📄 Download HTML Report",
-    #         data=report_html,
-    #         file_name="autoeda_report.html",
-    #         mime="text/html"
-    #     )
+        st.download_button(
+            label="📄 Download HTML Report",
+            data=report_html,
+            file_name="autoeda_report.html",
+            mime="text/html"
+        )
 

@@ -1,14 +1,14 @@
 from openai import OpenAI
 import google.generativeai as genai
 
+
 class AIAssistant:
+
     def __init__(self, provider, api_key):
         self.provider = provider.lower()
         self.api_key = api_key
 
         if self.provider == "openai":
-            if OpenAI is None:
-                raise ImportError("openai is not installed.")
             self.client = OpenAI(api_key=api_key)
 
         elif self.provider == "gemini":
@@ -18,72 +18,132 @@ class AIAssistant:
         else:
             raise ValueError("Unsupported Provider")
 
-    def generate_summary(self, insights):
-        prompt = self._build_prompt(insights)
-        
-        if self.provider == 'openai':
-            try:
-                return self._openai_response(prompt)
-            except Exception as e:
-                return f"AI Error: {str(e)}"
-        
-        elif self.provider == 'gemini':
-            try:
-                return self._gemini_response(prompt)
-            except Exception as e:
-                return f"AI Error: {str(e)}"
+    def generate_summary(
+        self,
+        insights,
+        dataset_info=None,
+        ml_results=None,
+        custom_prompt=None
+    ):
 
-
-    def _openai_response(self,prompt):
-        response = self.client.chat.completions.create(
-            model = 'gpt-4o-mini',
-            messages = [
-                {"role": "system", "content": "You are a Data Analyst"},
-                {"role": "user", "content": prompt}
-            ],
-            temperature = 0.3
+        prompt = self._build_prompt(
+            insights,
+            dataset_info,
+            ml_results,
+            custom_prompt
         )
+
+        try:
+
+            if self.provider == "openai":
+                return self._openai_response(prompt)
+
+            elif self.provider == "gemini":
+                return self._gemini_response(prompt)
+
+        except Exception as e:
+            return f"AI Error: {str(e)}"
+
+    def _openai_response(self, prompt):
+
+        response = self.client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a senior data analyst. "
+                        "Provide concise and actionable insights."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ],
+            temperature=0.3,
+        )
+
         return response.choices[0].message.content
-    
 
     def _gemini_response(self, prompt):
+
         response = self.model.generate_content(prompt)
+
         return self._trim_response(response.text)
-    
 
-    def _trim_response(self,text,max_lines = 20):
+    def _trim_response(self, text, max_lines=30):
+
         lines = text.split("\n")
+
         return "\n".join(lines[:max_lines])
-    
 
+    def _build_prompt(
+        self,
+        insights,
+        dataset_info=None,
+        ml_results=None,
+        custom_prompt=None
+    ):
 
-    def _build_prompt(self, insights):
-        text = "You are a senior data analyst.\n"
-        text += "Analyze the dataset insights and respond VERY CONCISELY.\n\n"
+        text = """
+You are a senior data analyst.
+
+Analyze the dataset and provide:
+
+1. Key Findings
+2. Data Quality Issues
+3. Business Insights
+4. Recommendations
+
+Keep the response concise and professional.
+
+"""
+
+        if dataset_info:
+
+            text += "\nDATASET INFORMATION:\n"
+
+            for key, value in dataset_info.items():
+                text += f"- {key}: {value}\n"
+
+        text += "\nDATA INSIGHTS:\n"
 
         for category, items in insights.items():
-            text += f"{category.upper()}:\n"
-            for item in items[:3]:
+
+            text += f"\n{category.upper()}:\n"
+
+            for item in items[:5]:
                 text += f"- {item}\n"
 
-        text += """
-    STRICT RULES:
-    - Max 200 words total
-    - Use bullet points only
-    - No paragraphs
-    - No explanations longer than 1 line
-    - Focus only on important issues
+        if ml_results:
 
-    FORMAT:
+            text += "\nML RESULTS:\n"
 
-    KEY INSIGHTS:
-    - ...
+            text += (
+                f"- Problem Type: "
+                f"{ml_results.get('type', 'Unknown')}\n"
+            )
 
-    ISSUES:
-    - ...
+            text += (
+                f"- Best Model: "
+                f"{ml_results.get('best_model', 'N/A')}\n"
+            )
 
-    RECOMMENDATIONS:
-    - ...
-    """
+            text += (
+                f"- Best Score: "
+                f"{ml_results.get('best_score', 'N/A')}\n"
+            )
 
-        return text
+        if custom_prompt:
+
+            text += "\nUSER REQUEST:\n"
+
+            text += f"""
+            {custom_prompt}
+
+            IMPORTANT:
+            Focus ONLY on the requested analysis type.
+            Do not provide generic dataset summaries.
+            Do not repeat the dataset information.
+            """

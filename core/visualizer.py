@@ -68,7 +68,8 @@ class DataVisualizer:
 
         if self.df.shape[0] > 5000:
             df = self.df.sample(n=5000, random_state=42)
-        df = self.df.copy()
+        else:
+            df = self.df.copy()
 
         df = df[[x_col, y_col] + ([hue_col] if hue_col else [])].dropna()
 

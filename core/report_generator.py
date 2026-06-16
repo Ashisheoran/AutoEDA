@@ -1,4 +1,5 @@
 import pandas as pd
+from datetime import datetime
 
 
 class ReportGenerator:
@@ -77,6 +78,9 @@ class ReportGenerator:
         </head>
 
         <body>
+        <p><b>Generated On:</b>
+        {datetime.now().strftime("%d-%m-%Y %H:%M")}
+        </p>
 
         <h1>AutoEDA Report</h1>
 
@@ -93,6 +97,22 @@ class ReportGenerator:
             <p><b>Categorical Columns:</b>
             {len(self.df.select_dtypes(exclude='number').columns)}
             </p>
+        </div>
+        """
+
+        duplicates = self.df.duplicated().sum()
+        missing_pct = round(
+            (self.df.isnull().sum().sum() /
+            (self.df.shape[0] * self.df.shape[1])) * 100,
+            2)
+        html += f"""
+        <div class="card">
+            <h2>Data Quality</h2>
+
+            <p><b>Missing Percentage:</b> {missing_pct}%</p>
+
+            <p><b>Duplicate Rows:</b> {duplicates}</p>
+
         </div>
         """
 
