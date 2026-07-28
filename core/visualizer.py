@@ -242,6 +242,7 @@ class DataVisualizer:
         fig = px.bar(
             data,
             x=column,
+            y="count",
             color=column,
             template="plotly_dark",
         )

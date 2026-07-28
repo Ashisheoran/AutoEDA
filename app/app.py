@@ -16,7 +16,7 @@ def load_data(file):
     return df, info
 
 st.set_page_config(
-    page_title="AutoEDA AI",
+    page_title="AutoEDA",
     page_icon="⬡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -703,86 +703,86 @@ with ai_tab:
 # TAB 8 — report download
 
     with report_tab:
+        st.markdown("This feature is coming soon...........")
+        # report_charts = []
 
-        report_charts = []
+        # visualizer = DataVisualizer(df)
 
-        visualizer = DataVisualizer(df)
+        # numeric_cols = df.select_dtypes(
+        #     include="number"
+        # ).columns.tolist()
 
-        numeric_cols = df.select_dtypes(
-            include="number"
-        ).columns.tolist()
-
-        categorical_cols = df.select_dtypes(
-            exclude="number"
-        ).columns.tolist()
-
-
-        # Distribution Chart
-        if numeric_cols:
-            report_charts.append(
-                visualizer.histogram(
-                    numeric_cols[0]
-                )
-            )
+        # categorical_cols = df.select_dtypes(
+        #     exclude="number"
+        # ).columns.tolist()
 
 
-        # Scatter + Correlation
-        if len(numeric_cols) >= 2:
-
-            report_charts.append(
-                visualizer.scatter_with_trend(
-                    numeric_cols[0],
-                    numeric_cols[1]
-                )
-            )
-
-            heatmap = visualizer.correlation_heatmap()
-
-            if heatmap:
-                report_charts.append(heatmap)
+        # # Distribution Chart
+        # if numeric_cols:
+        #     report_charts.append(
+        #         visualizer.histogram(
+        #             numeric_cols[0]
+        #         )
+        #     )
 
 
-        # Main Categorical Distribution
-        if categorical_cols:
+        # # Scatter + Correlation
+        # if len(numeric_cols) >= 2:
 
-            report_charts.append(
-                visualizer.categorical_bar(
-                    categorical_cols[0]
-                )
-            )
+        #     report_charts.append(
+        #         visualizer.scatter_with_trend(
+        #             numeric_cols[0],
+        #             numeric_cols[1]
+        #         )
+        #     )
+
+        #     heatmap = visualizer.correlation_heatmap()
+
+        #     if heatmap:
+        #         report_charts.append(heatmap)
 
 
-        # Categorical vs Numeric
-        if categorical_cols and numeric_cols:
+        # # Main Categorical Distribution
+        # if categorical_cols:
 
-            report_charts.append(
-                visualizer.categorical_vs_numeric_box(
-                    categorical_cols[0],
-                    numeric_cols[0]
-                )
-            )
-        ml_results = None
-        if "ml_results" in st.session_state:
-            ml_results = st.session_state["ml_results"]
+        #     report_charts.append(
+        #         visualizer.categorical_bar(
+        #             categorical_cols[0]
+        #         )
+        #     )
+
+
+        # # Categorical vs Numeric
+        # if categorical_cols and numeric_cols:
+
+        #     report_charts.append(
+        #         visualizer.categorical_vs_numeric_box(
+        #             categorical_cols[0],
+        #             numeric_cols[0]
+        #         )
+        #     )
+        # ml_results = None
+        # if "ml_results" in st.session_state:
+        #     ml_results = st.session_state["ml_results"]
         
-        ai_summary = None
-        if "ai_summary" in st.session_state:
-            ai_summary = st.session_state["ai_summary"]
+        # ai_summary = None
+        # if "ai_summary" in st.session_state:
+        #     ai_summary = st.session_state["ai_summary"]
 
-        report_generator = ReportGenerator(
-            df=df,
-            insights=insights,
-            charts=report_charts,
-            ml_results=ml_results,
-            ai_summary=ai_summary
-        )
+        # report_generator = ReportGenerator(
+        #     df=df,
+        #     insights=insights,
+        #     charts=report_charts,
+        #     ml_results=ml_results,
+        #     ai_summary=ai_summary
+        # )
 
-        report_html = report_generator.generate_html_report()
+        # report_html = report_generator.generate_html_report()
 
-        st.download_button(
-            label="📄 Download HTML Report",
-            data=report_html,
-            file_name="autoeda_report.html",
-            mime="text/html"
-        )
+        # st.download_button(
+        #     label="📄 Download HTML Report",
+        #     data=report_html,
+        #     file_name="autoeda_report.html",
+        #     mime="text/html"
+        # )
 
